@@ -1,0 +1,59 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body style="background-color: #343a40;">
+	<div class="container-fluid">
+		<table class="table table-striped table-dark" id="devicesTable">
+			<thead>
+				<tr>
+					<th scope="col">MAC</th>
+					<th scope="col">Vendor</th>
+					<th scope="col">RSSI</th>
+					<th scope="col">BSSID</th>
+					<th scope="col">Time (Unix)</th>
+				</tr>
+			</thead>
+			<tbody>
+				
+			</tbody>
+		</table>
+	</div>
+
+	<script type="text/javascript">
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var jdata = JSON.parse(this.responseText);
+				
+				var devices = JSON.parse(jdata); 
+				var table = document.getElementById("devicesTable");
+				var rows = 1;
+
+				for (var key in devices) {
+					var row = table.insertRow(rows);
+				    var cellMAC = row.insertCell(0);
+				    var cellVendor = row.insertCell(1);
+				    var cellRSSI = row.insertCell(2);
+				    var cellBSSID = row.insertCell(3);
+				    var cellTime = row.insertCell(4);
+
+				    cellMAC.innerHTML = devices[key].MAC;
+				    cellVendor.innerHTML = devices[key].Vendor;
+				    cellRSSI.innerHTML = devices[key].RSSI;
+				    cellBSSID.innerHTML = devices[key].BSSID;
+				    cellTime.innerHTML = devices[key].Time;
+
+				    row++;
+				}
+
+			} else {
+				console.log("Error XMLHTTP")
+			}
+		};
+		xmlhttp.open("GET", "127.0.0.1:8080/scan", true);
+		xmlhttp.send(); 
+	</script>
+</body>
+</html>
