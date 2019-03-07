@@ -48,7 +48,7 @@ func main() {
 
     // Start http server
     http.HandleFunc("/scan", HTTPHandler)
-    go http.ListenAndServe(":8080", nil)
+    go http.ListenAndServe("127.0.0.1:8080", nil)
     fmt.Println("Server online")
 
 	if os.Args[1] == "offline" {
@@ -75,12 +75,6 @@ func main() {
 		
 		// Scan packets and store information in devicesList
 		LiveScan(handle)
-		fmt.Println("")
-
-		// Print devices info
-		for _, d := range devicesList {
-			fmt.Printf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", d.MAC, d.Vendor, d.RSSI, d.DetectedTime)
-		}
 	}
 }
 
@@ -122,8 +116,13 @@ func LiveScan(handle *pcap.Handle) {
     	_, ok := devicesList[device.MAC]
     	if !ok {
             devicesList[device.MAC] = device
-            log.Printf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", device.MAC, device.Vendor, device.RSSI, device.DetectedTime)
+            //log.Printf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", device.MAC, device.Vendor, device.RSSI, device.DetectedTime)
             d++
+        } else {
+            if device.RSSI != devicesList[device.MAC].RSSI {
+                delete(devicesList, device.MAC)
+                devicesList[device.MAC] = device
+            }
         }
     	fmt.Printf("\rDevices found: %d", d)
     }

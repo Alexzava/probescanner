@@ -1,16 +1,43 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
+	"log"
 	"net/http"
-	"io"
+	//"io"
+	"encoding/json"
+
+	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{} // use default options
+
 func HTTPHandler(w http.ResponseWriter, r *http.Request) {
-	// Send devices info
-	var out string
-	for _, d := range devicesList {
-		out += fmt.Sprintf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", d.MAC, d.Vendor, d.RSSI, d.DetectedTime)
+	upgrader.CheckOrigin = func(r *http.Request) bool {return true}
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-	io.WriteString(w, out)
+	defer c.Close()
+
+	mt, message, err := c.ReadMessage()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	
+	if string(message) == "get_devices" {
+		// Send devices info
+		out, err := json.Marshal(devicesList)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		err = c.WriteMessage(mt, out)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
 }
