@@ -1,16 +1,12 @@
 var command = "get_devices";
 var ws = new WebSocket("ws://127.0.0.1:8080/scan");
 
-setInterval(function() {
+ws.onopen = function() {
 	ws.send(command);
-}, 5000);
-
-
-/*ws.onopen = function() {
-	ws.send(command);
-};*/
+};
 
 ws.onmessage = function (evt) { 
+	console.log("Update");
 	var received_msg = evt.data;
 	ParseDevices(received_msg)
 };
