@@ -100,23 +100,25 @@ func LiveScan(handle *pcap.Handle) {
 
     	dot11, _ := layer.(*layers.Dot11)
 
+        // Set device informations
     	device := DeviceInfo{}
     	device.MAC = dot11.Address2.String()
     	device.BSSID = dot11.Address3.String()
     	device.Vendor = GetVendorInfo(device.MAC)
+        device.DetectedTime = time.Now().Unix()
     	device.RSSI = -100
 
+        // Get RSSI
     	radio := packet.Layer(layers.LayerTypeRadioTap)
     	if radio != nil {
     		dot11r, _ := radio.(*layers.RadioTap)
     		device.RSSI = dot11r.DBMAntennaSignal
     	}
-    	device.DetectedTime = time.Now().Unix()
 
+        // Add device to list
     	_, ok := devicesList[device.MAC]
     	if !ok {
             devicesList[device.MAC] = device
-            //log.Printf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", device.MAC, device.Vendor, device.RSSI, device.DetectedTime)
             d++
         } else {
             if device.RSSI != devicesList[device.MAC].RSSI {
