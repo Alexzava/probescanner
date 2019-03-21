@@ -1,14 +1,15 @@
-var command = "get_devices";
-var ws = new WebSocket("ws://127.0.0.1:8080/scan");
+setInterval(function(){ UpdateDevices() }, 3000);
 
-ws.onopen = function() {
-	ws.send(command);
-};
-
-ws.onmessage = function (evt) { 
-	var received_msg = evt.data;
-	ParseDevices(received_msg)
-};
+function UpdateDevices() {
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+	        ParseDevices(this.responseText)
+	    }
+	};
+	xmlhttp.open("GET", "http://127.0.0.1:8683", true);
+	xmlhttp.send();
+}
 
 function ParseDevices(jsonString) {
 	// Read filters

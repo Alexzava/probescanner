@@ -4,6 +4,7 @@ import (
 	"fmt"
     "log"
     "os"
+    "io"
     "strings"
     "bufio"
     "time"
@@ -29,53 +30,34 @@ var (
 
 func main() {
     // Open log file
-    captureFile := "cap.log"
+    captureFile := "logs"
     outFile, err := os.OpenFile(captureFile, os.O_APPEND|os.O_WRONLY, 0600)
     if err != nil {
         log.Fatal(err)  
     }
     defer outFile.Close()
-    log.SetOutput(outFile)
 
-	// Rad args
-	if len(os.Args) < 2 {
-		log.Fatal("Invalid arguments")
-	}
-    log.Println(os.Args)
+    // Set log outputs
+    mw := io.MultiWriter(os.Stdout, outFile)
+    log.SetOutput(mw)
 
     // Load vendor database
 	LoadVendorDatabase()
 
     // Start http server
-    http.HandleFunc("/scan", HTTPHandler)
-    go http.ListenAndServe("127.0.0.1:8080", nil)
-    fmt.Println("Server online")
+    http.HandleFunc("/", HTTPHandler)
+    go http.ListenAndServe("127.0.0.1:8683", nil)
+    log.Println("Server ready")
 
-	if os.Args[1] == "offline" {
-		// Open PCAP file
-		pcapFile := os.Args[2]
-		handle, err := pcap.OpenOffline(pcapFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Scan packets and store information in devicesList
-		ScanPackets(handle)
-
-		// Print devices info
-		for _, d := range devicesList {
-			fmt.Printf("Device (MAC): %s\n\tVendor: %s\n\tSignal: %d\n\tTime (Unix): %d\n\n", d.MAC, d.Vendor, d.RSSI, d.DetectedTime)
-		}
-	} else if os.Args[1] == "live" {
-		interfaces := os.Args[2]
-		handle, err := pcap.OpenLive(interfaces, 1600, true, pcap.BlockForever)
-		if err != nil {
-			log.Fatal(err)
-		}
-		
-		// Scan packets and store information in devicesList
-		LiveScan(handle)
-	}
+    log.Println("Scanning...")
+	interfaces := os.Args[1]
+    handle, err := pcap.OpenLive(interfaces, 1600, true, pcap.BlockForever)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Scan packets and store information in devicesList
+    LiveScan(handle)
 }
 
 // Scan packet in live mode
@@ -127,42 +109,6 @@ func LiveScan(handle *pcap.Handle) {
             }
         }
     	fmt.Printf("\rDevices found: %d", d)
-    }
-}
-
-// Scan packets and store informations in deviceList
-func ScanPackets(handle *pcap.Handle) {
-	// Set filter
-	var filter string = "subtype probe-req"
-    err := handle.SetBPFFilter(filter)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Scan packets
-    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-    for packet := range packetSource.Packets() {
-    	// Parse 802.11 layer
-    	layer := packet.Layer(layers.LayerTypeDot11)
-    	dot11, _ := layer.(*layers.Dot11)
-
-    	device := DeviceInfo{}
-    	device.MAC = dot11.Address2.String()
-    	device.BSSID = dot11.Address3.String()
-    	device.Vendor = GetVendorInfo(device.MAC)
-    	device.RSSI = -100
-
-    	radio := packet.Layer(layers.LayerTypeRadioTap)
-    	if radio != nil {
-    		dot11r, _ := radio.(*layers.RadioTap)
-    		device.RSSI = dot11r.DBMAntennaSignal
-    	}
-    	device.DetectedTime = time.Now().Unix()
-
-    	_, ok := devicesList[device.MAC]
-    	if !ok {
-    		devicesList[device.MAC] = device
-    	}
     }
 }
 
