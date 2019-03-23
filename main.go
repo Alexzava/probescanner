@@ -4,7 +4,6 @@ import (
 	"fmt"
     "log"
     "os"
-    "io"
     "strings"
     "bufio"
     "time"
@@ -29,17 +28,9 @@ var (
 )
 
 func main() {
-    // Open log file
-    captureFile := "logs"
-    outFile, err := os.OpenFile(captureFile, os.O_APPEND|os.O_WRONLY, 0600)
-    if err != nil {
-        log.Fatal(err)  
+    if len(os.Args) < 2 {
+        log.Fatal("Usage ./scanner <interface>")
     }
-    defer outFile.Close()
-
-    // Set log outputs
-    mw := io.MultiWriter(os.Stdout, outFile)
-    log.SetOutput(mw)
 
     // Load vendor database
 	LoadVendorDatabase()
@@ -60,7 +51,7 @@ func main() {
     LiveScan(handle)
 }
 
-// Scan packet in live mode
+// Scan for probe requests
 func LiveScan(handle *pcap.Handle) {
 	// Set filter
 	err := handle.SetBPFFilter("subtype probe-req")
@@ -69,7 +60,7 @@ func LiveScan(handle *pcap.Handle) {
 	}
 
 	// Scan packets
-    d := 0
+    devices := 0
     packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
     for packet := range packetSource.Packets() {
 
@@ -98,21 +89,21 @@ func LiveScan(handle *pcap.Handle) {
     	}
 
         // Add device to list
-    	_, ok := devicesList[device.MAC]
+    	dd, ok := devicesList[device.MAC]
     	if !ok {
             devicesList[device.MAC] = device
-            d++
+            devices++
         } else {
-            if device.RSSI != devicesList[device.MAC].RSSI {
+            if device.RSSI != dd.RSSI {
                 delete(devicesList, device.MAC)
                 devicesList[device.MAC] = device
             }
         }
-    	fmt.Printf("\rDevices found: %d", d)
+    	fmt.Printf("\rDevices found: %d", devices)
     }
 }
 
-// Load vendor database in memory
+// Load vendor database
 func LoadVendorDatabase() {
 	file, err := os.Open("mac.list")
     if err != nil {
@@ -132,6 +123,7 @@ func LoadVendorDatabase() {
     }
 }
 
+// Get vendor information from MAC
 func GetVendorInfo(MAC string) string {
 	splitted := strings.Split(MAC, ":")
     if len(splitted) < 3 {

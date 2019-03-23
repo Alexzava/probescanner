@@ -28,10 +28,10 @@ function ParseDevices(jsonString) {
 	    // Calculate distance (NOT ACCURATE	)
 	        // Formula
             // TxPower = -54 (Estimated)
-            // N = 5 (2 to 5 depends on location)
+            // N = 2 (2 to 5 depends on location)
             // d = 10^((TxPower - RSSI)/(10*N))
         var TxPower = -54;
-        var N = 5;
+        var N = 2;
         var distance = Number(Math.pow(10, ((TxPower - devices[key].RSSI)/(10*N)))).toFixed(1);
 
 		// Check filters
@@ -53,7 +53,7 @@ function ParseDevices(jsonString) {
 			}
 		}
 
-		// Insert device to table
+		// Add device to table
 		var row = table.insertRow(rows);
 	    var cellMAC = row.insertCell(0);
 	    var cellVendor = row.insertCell(1);
