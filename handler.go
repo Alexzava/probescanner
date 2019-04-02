@@ -8,15 +8,16 @@ import (
 )
 
 func HTTPHandler(w http.ResponseWriter, r *http.Request) {
-	(w).Header().Set("Access-Control-Allow-Origin", "*")
+	//(w).Header().Set("Access-Control-Allow-Origin", "*")
 	
-	// Send devices info
+	// Create JSON
 	out, err := json.Marshal(devicesList)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
+	// Send response to client
 	_, err = io.WriteString(w, string(out))
 	if err != nil {
 		log.Fatal(err)

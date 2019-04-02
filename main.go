@@ -123,7 +123,7 @@ func LoadVendorDatabase() {
     }
 }
 
-// Get vendor information from MAC
+// Get vendor name by MAC
 func GetVendorInfo(MAC string) string {
 	splitted := strings.Split(MAC, ":")
     if len(splitted) < 3 {

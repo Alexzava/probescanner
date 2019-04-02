@@ -1,7 +1,12 @@
+/*
+
+	Code written in just an hour, it might be better.
+*/
+
 setInterval(function(){ UpdateDevices() }, 3000);
 
 function UpdateDevices() {
-	var xmlhttp = new XMLHttpRequest();
+	let xmlhttp = new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
 	        ParseDevices(this.responseText)
@@ -13,26 +18,26 @@ function UpdateDevices() {
 
 function ParseDevices(jsonString) {
 	// Read filters
-	var url = new URL(window.location.href);
-	var filterType = url.searchParams.get("f");
-	var filterContent = url.searchParams.get("c");
+	let url = new URL(window.location.href);
+	let filterType = url.searchParams.get("f");
+	let filterContent = url.searchParams.get("c");
 
-	var devices = JSON.parse(jsonString);
-	var table = document.getElementById("devicesTable");
-	var rows = 1;
-	var totalDevices = 0;
+	let devices = JSON.parse(jsonString);
+	let table = document.getElementById("devicesTable");
+	let rows = 1;
+	let totalDevices = 0;
 
-	for(var key in devices) {
+	for(let key in devices) {
 		totalDevices++;
 
-	    // Calculate distance (NOT ACCURATE	)
+	    // Calculate distance (NOT ACCURATE!)
 	        // Formula
             // TxPower = -54 (Estimated)
             // N = 2 (2 to 5 depends on location)
             // d = 10^((TxPower - RSSI)/(10*N))
-        var TxPower = -54;
-        var N = 2;
-        var distance = Number(Math.pow(10, ((TxPower - devices[key].RSSI)/(10*N)))).toFixed(1);
+        let TxPower = -54;
+        let N = 2;
+        let distance = Number(Math.pow(10, ((TxPower - devices[key].RSSI)/(10*N)))).toFixed(1);
 
 		// Check filters
 		if(filterType != null) {
@@ -54,23 +59,23 @@ function ParseDevices(jsonString) {
 		}
 
 		// Add device to table
-		var row = table.insertRow(rows);
-	    var cellMAC = row.insertCell(0);
-	    var cellVendor = row.insertCell(1);
-	    var cellRSSI = row.insertCell(2);
-	    var cellDistance = row.insertCell(3);
-	    var cellBSSID = row.insertCell(4);
-	    var cellTime = row.insertCell(5);
+		let row = table.insertRow(rows);
+	    let cellMAC = row.insertCell(0);
+	    let cellVendor = row.insertCell(1);
+	    let cellRSSI = row.insertCell(2);
+	    let cellDistance = row.insertCell(3);
+	    let cellBSSID = row.insertCell(4);
+	    let cellTime = row.insertCell(5);
 
-	    cellMAC.innerHTML = '<a href="?f=mac&c='+devices[key].MAC+'">'+devices[key].MAC+'</a>'; // devices[key].MAC
+	    cellMAC.innerHTML = '<a href="?f=mac&c='+devices[key].MAC+'">'+devices[key].MAC+'</a>';
 	    cellVendor.innerHTML = '<a href="?f=vendor&c='+devices[key].MAC.substring(0,8)+'">'+devices[key].Vendor+'</a>';
 	    cellRSSI.innerHTML = devices[key].RSSI;
 	    cellBSSID.innerHTML = '<a href="?f=bssid&c='+devices[key].BSSID+'">'+devices[key].BSSID+'</a>';
 
-        cellDistance.innerHTML = distance;
+        cellDistance.innerHTML = distance + " m";
 
-	    // Parse time from Unix
-	    var date = new Date(devices[key].DetectedTime*1000)
+	    // Parse time
+	    let date = new Date(devices[key].DetectedTime*1000)
 	    cellTime.innerHTML = date.toString();
 
 	    row++;
