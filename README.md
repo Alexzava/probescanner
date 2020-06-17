@@ -1,6 +1,9 @@
 # probescanner
 Probe request scanner to find devices around you. Made with Go!
 
+## Notes
+This is an old project, it will not be updated.
+It should work. I don't have time to try it, let me know.
 
 ## Build
 
